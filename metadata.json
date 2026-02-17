@@ -1,0 +1,5 @@
+{
+  "name": "LogiFlow",
+  "description": "A comprehensive logistics management system featuring order tracking, fleet management, and assembly oversight. Powered by Supabase for scalable real-time data persistence.",
+  "requestFramePermissions": []
+}
