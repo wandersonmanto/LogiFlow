@@ -102,13 +102,21 @@ export interface Product {
   id: string;
   sku: string;
   description: string;
-  assemblyValue: number; // Valor de montagem
+    assemblyValue: number;
+    quantity: number;
+    toDeliver: boolean;
+    toAssemble: boolean;
+}
+
+export interface NewProduct {
+    id: number;
+    sku: string;
+    description: string;
+    createdAt: string;
 }
 
 export interface OrderItem extends Product {
-  quantity: number;
-  toDeliver: boolean; // Para entrega parcial
-  toAssemble: boolean; // Para montagem
+  // All fields are now in Product as per the user's edit
 }
 
 export interface Driver {

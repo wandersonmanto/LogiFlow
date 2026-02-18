@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import { Order, OrderStatus, OrderType, Product, LogisticsStatus, DeliveryType, OrderItem, AssemblerStats, Driver, Vehicle, DeliveryAttempt } from '../types';
+import { Order, OrderStatus, OrderType, Product, LogisticsStatus, DeliveryType, OrderItem, AssemblerStats, Driver, Vehicle, DeliveryAttempt, NewProduct } from '../types';
 
 /**
  * DB Service Implementation for Supabase
@@ -336,8 +336,165 @@ export const dbService = {
         id: p.id,
         sku: p.sku,
         description: p.description,
-        assemblyValue: p.assembly_value
+        assemblyValue: p.assembly_value,
+        barcode: p.barcode
     }));
+  },
+
+  getProducts: async (page: number, pageSize: number, query?: string): Promise<{ data: Product[], count: number }> => {
+      let queryBuilder = supabase
+          .from('products')
+          .select('*', { count: 'exact' });
+
+      if (query) {
+          queryBuilder = queryBuilder.or(`sku.ilike.%${query}%,description.ilike.%${query}%`);
+      }
+
+      const from = (page - 1) * pageSize;
+      const { data, count, error } = await queryBuilder
+          .range(from, from + pageSize - 1)
+          .order('description');
+      
+      if (error) {
+          console.error('Error fetching products:', error);
+          throw new Error(`Erro ao buscar produtos: ${error.message}`);
+      }
+
+      const products = (data || []).map((p: any) => ({
+            id: p.id,
+            sku: p.sku,
+            description: p.description,
+            assemblyValue: p.assembly_value,
+            barcode: p.barcode
+      }));
+
+      return { data: products, count: count || 0 };
+  },
+
+  updateProduct: async (id: string, updates: Partial<Product>): Promise<Product> => {
+      const dbUpdates: any = {};
+      if (updates.assemblyValue !== undefined) dbUpdates.assembly_value = updates.assemblyValue;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.barcode !== undefined) dbUpdates.barcode = updates.barcode;
+      // Add other fields if necessary
+
+      const { data, error } = await supabase
+          .from('products')
+          .update(dbUpdates)
+          .eq('id', id)
+          .select()
+          .single();
+      
+      if (error) {
+          console.error('Error updating product:', error);
+          throw new Error(`Erro ao atualizar produto: ${error.message}`);
+      }
+
+      return {
+            id: data.id,
+            sku: data.sku,
+            description: data.description,
+            assemblyValue: data.assembly_value,
+            barcode: data.barcode
+      };
+  },
+
+  getProductBySku: async (sku: string): Promise<Product | null> => {
+      const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('sku', sku)
+          .single();
+      
+      if (error) {
+           // If error is "PGRST116" it means no rows returned, which is fine (not found)
+           if (error.code !== 'PGRST116') {
+               console.error('Error fetching product by sku:', error);
+           }
+           return null;
+      }
+
+      return {
+        id: data.id,
+        sku: data.sku,
+        description: data.description,
+        assemblyValue: data.assembly_value,
+        barcode: data.barcode
+      };
+  },
+
+  // New Products List
+  createNewProductEntry: async (data: { sku: string, description: string }): Promise<void> => {
+      const { error } = await supabase
+          .from('new_products')
+          .insert({ sku: data.sku, description: data.description });
+      
+      if (error) {
+          console.error("Error creating new product entry", error);
+          // Non-blocking error, just log it
+      }
+  },
+
+  getNewProducts: async (): Promise<NewProduct[]> => {
+      const { data, error } = await supabase
+          .from('new_products')
+          .select('*')
+          .order('created_at', { ascending: false });
+      
+      if (error) {
+          console.error('Error fetching new products:', error);
+          return [];
+      }
+
+      return (data || []).map((p: any) => ({
+          id: p.id,
+          sku: p.sku,
+          description: p.description,
+          createdAt: p.created_at
+      }));
+  },
+
+  clearNewProducts: async (): Promise<void> => {
+      const { error } = await supabase
+          .from('new_products')
+          .delete()
+          .neq('id', 0); // Delete all rows. 'id' != 0 is a trick if we want to delete all, or better use a simpler condition. 
+          // Actually, .delete() requires a filter in Supabase client usually to avoid accidental deletes, 
+          // but .gt('id', -1) is a common pattern to delete all.
+      
+      // Let's use gt('id', -1) assuming IDs are positive
+      await supabase.from('new_products').delete().gt('id', -1);
+
+      if (error) {
+          console.error('Error clearing new products:', error);
+          throw error;
+      }
+  },
+
+  createProduct: async (product: Omit<Product, 'id'>): Promise<Product> => {
+      const { data, error } = await supabase
+          .from('products')
+          .insert({
+              sku: product.sku,
+              description: product.description,
+              assembly_value: product.assemblyValue,
+              barcode: product.barcode
+          })
+          .select()
+          .single();
+      
+      if (error) {
+          console.error("Error creating product", error);
+          throw new Error(`Erro ao criar produto: ${error.message}`);
+      }
+      
+      return {
+        id: data.id,
+        sku: data.sku,
+        description: data.description,
+        assemblyValue: data.assembly_value,
+        barcode: data.barcode
+      };
   },
 
   // Fleet

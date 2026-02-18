@@ -13,6 +13,9 @@ import { Reports } from './pages/Reports';
 import { RouteManagement } from './pages/RouteManagement';
 import { FleetManagement } from './pages/FleetManagement';
 import { Drafts } from './pages/Drafts';
+import { ProductImport } from './pages/ProductImport';
+import { ProductList } from './pages/ProductList';
+import { NewProducts } from './pages/NewProducts';
 
 // Protected Route Component
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -116,6 +119,30 @@ const AppRoutes = () => {
                 <RequireAuth>
                     <Layout>
                         <FleetManagement />
+                    </Layout>
+                </RequireAuth>
+            } />
+
+            <Route path="/products/import" element={
+                <RequireAuth>
+                    <Layout>
+                        <ProductImport />
+                    </Layout>
+                </RequireAuth>
+            } />
+
+            <Route path="/products/list" element={
+                <RequireAuth>
+                    <Layout>
+                        <ProductList />
+                    </Layout>
+                </RequireAuth>
+            } />
+
+            <Route path="/products/new" element={
+                <RequireAuth>
+                    <Layout>
+                        <NewProducts />
                     </Layout>
                 </RequireAuth>
             } />

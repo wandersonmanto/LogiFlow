@@ -44,6 +44,9 @@ export const Sidebar: React.FC = () => {
         <NavItem path="/fleet" icon="local_shipping" label="Gestão de Frota" />
         <NavItem path="/assembly" icon="build" label="Montagem" />
         <NavItem path="/reports" icon="bar_chart" label="Relatórios" />
+        <NavItem path="/products/list" icon="inventory" label="Lista de Produtos" />
+        <NavItem path="/products/new" icon="fiber_new" label="Novos Produtos" />
+        <NavItem path="/products/import" icon="upload_file" label="Importar Produtos" />
       </nav>
 
       <div className="p-4 border-t border-slate-200">
