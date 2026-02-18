@@ -306,6 +306,7 @@ export const dbService = {
   },
 
   updateAssemblyData: async (id: string, data: { assembler: string, bonus: number, bonusDesc: string }): Promise<boolean> => {
+    // Legacy method - keeping for backward compatibility but recommend using updateAssemblyStatus
     const { error } = await supabase.from('orders').update({
         assembler: data.assembler,
         assembly_bonus: data.bonus,
@@ -315,6 +316,49 @@ export const dbService = {
     
     if (error) throw error;
     return true;
+  },
+
+  updateAssemblyStatus: async (id: string, status: 'Pendente' | 'Agendado' | 'Atribuído' | 'Concluído', extraData?: { assembler?: string, bonus?: number, bonusDesc?: string }): Promise<boolean> => {
+      const updateData: any = { assembly_status: status };
+      
+      if (extraData?.assembler) updateData.assembler = extraData.assembler;
+      if (extraData?.bonus !== undefined) updateData.assembly_bonus = extraData.bonus;
+      if (extraData?.bonusDesc !== undefined) updateData.assembly_bonus_description = extraData.bonusDesc;
+
+      // Set date when completed
+      if (status === 'Concluído') {
+          // We might want to track completion date separate from assignment date?
+          // For now using assembly_date as the relevant date, or created_at if null?
+          // Let's assume assembly_date was set during scheduling/assignment, 
+          // but strictly speaking we might want a 'completed_at'. 
+          // reusing assembly_date for now or just relying on status change.
+      }
+
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) {
+          console.error("Error updating assembly status", error);
+          throw error;
+      }
+      return true;
+  },
+
+  getAssembliesByStatus: async (status: string): Promise<Order[]> => {
+      const { data, error } = await supabase
+          .from('orders')
+          .select(`*, order_items (*)`)
+          .eq('has_assembly', true)
+          .eq('assembly_status', status)
+          .order('date', { ascending: true });
+      
+      if (error) {
+          console.error("Error fetching assemblies by status", error);
+          return [];
+      }
+      return data ? data.map(mapOrderFromDB) : [];
   },
 
   // Products

@@ -23,6 +23,7 @@ export const AssemblyList: React.FC = () => {
       switch(s) {
           case 'Concluído': return <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 uppercase">Concluído</span>;
           case 'Agendado': return <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700 uppercase">Agendado</span>;
+          case 'Atribuído': return <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700 uppercase">Atribuído</span>;
           default: return <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 uppercase">Pendente</span>;
       }
   }

@@ -38,11 +38,11 @@ export const Sidebar: React.FC = () => {
         <NavItem path="/" icon="dashboard" label="Dashboard" exact />
         <NavItem path="/orders" icon="list_alt" label="Fila de Pedidos" />
         <NavItem path="/operational" icon="conveyor_belt" label="Fila Operacional" />
-        <NavItem path="/routes" icon="map" label="Gestão de Rotas" />
+        <NavItem path="/routes" icon="map" label="Roteirização" />
         <NavItem path="/new-order" icon="add_circle" label="Novo Pedido" />
         <NavItem path="/drafts" icon="edit_note" label="Rascunhos" />
-        <NavItem path="/fleet" icon="local_shipping" label="Gestão de Frota" />
         <NavItem path="/assembly" icon="build" label="Montagem" />
+        <NavItem path="/assembly/manifest" icon="fact_check" label="Romaneio de Montagem" />
         <NavItem path="/reports" icon="bar_chart" label="Relatórios" />
         <NavItem path="/products/list" icon="inventory" label="Lista de Produtos" />
         <NavItem path="/products/new" icon="fiber_new" label="Novos Produtos" />

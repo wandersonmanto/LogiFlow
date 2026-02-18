@@ -97,10 +97,11 @@ export const AssemblyDetail: React.FC = () => {
                                 <div className="flex justify-between items-start mb-2">
                                     <h4 className="font-bold text-slate-900 text-lg leading-tight">{item.description}</h4>
                                     <span className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase rounded-full">
-                                        No Prazo
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-400 font-mono mb-3">SKU: {item.sku}</p>
+                                <p className="text-xs text-slate-400 font-mono mb-3">
+                                    SKU: {item.sku} • <span className="text-slate-600 font-bold">Qtd: {item.quantity}</span>
+                                </p>
                                 <p className="text-sm font-bold text-primary">R$ {item.assemblyValue.toFixed(2)}</p>
                             </div>
 
@@ -129,73 +130,122 @@ export const AssemblyDetail: React.FC = () => {
                 </h3>
 
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
-                    {/* Assembler Selection */}
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Montador Responsável</label>
-                        <div className="relative">
-                             <select 
-                                value={selectedAssembler}
-                                onChange={(e) => setSelectedAssembler(e.target.value)}
-                                className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-primary focus:border-primary block p-3 pr-8 font-medium"
-                             >
-                                <option value="">Selecionar Montador</option>
-                                {assemblers.map(a => <option key={a} value={a}>{a}</option>)}
-                             </select>
-                             <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400 pointer-events-none">expand_more</span>
+                    {/* Status Display */}
+                    <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                        <span className="text-xs font-bold text-slate-500 uppercase">Status Atual</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                            order.assemblyStatus === 'Concluído' ? 'bg-emerald-100 text-emerald-700' :
+                            order.assemblyStatus === 'Atribuído' ? 'bg-purple-100 text-purple-700' :
+                            'bg-amber-100 text-amber-700'
+                        }`}>
+                            {order.assemblyStatus || 'Pendente'}
+                        </span>
+                    </div>
+
+                    {/* Logic for PENDING state (Assign) */}
+                    {(!order.assemblyStatus || order.assemblyStatus === 'Pendente' || order.assemblyStatus === 'Agendado') && (
+                        <>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Atribuir Montador</label>
+                                <div className="relative">
+                                     <select 
+                                        value={selectedAssembler}
+                                        onChange={(e) => setSelectedAssembler(e.target.value)}
+                                        className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-primary focus:border-primary block p-3 pr-8 font-medium"
+                                     >
+                                        <option value="">Selecionar Montador</option>
+                                        {assemblers.map(a => <option key={a} value={a}>{a}</option>)}
+                                     </select>
+                                     <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={async () => {
+                                    if (!selectedAssembler) return alert('Selecione um montador');
+                                    await dbService.updateAssemblyStatus(order.id, 'Atribuído', { assembler: selectedAssembler });
+                                    setOrder({ ...order, assemblyStatus: 'Atribuído', assembler: selectedAssembler }); // Optimistic update
+                                }}
+                                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-600/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined">person_add</span>
+                                Atribuir Montador
+                            </button>
+                        </>
+                    )}
+
+                    {/* Logic for ASSIGNED state (Complete) */}
+                    {order.assemblyStatus === 'Atribuído' && (
+                        <>
+                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 mb-2">
+                                <p className="text-xs text-purple-800 font-bold mb-1">Montador Responsável</p>
+                                <p className="text-sm font-medium text-purple-900">{order.assembler}</p>
+                            </div>
+
+                            <div className="h-px bg-slate-100"></div>
+
+                            {/* Subtotal */}
+                            <div className="flex justify-between items-center">
+                                <span className="text-slate-500 text-sm font-medium">Subtotal de Montagem</span>
+                                <span className="text-slate-900 font-bold">R$ {subTotal.toFixed(2)}</span>
+                            </div>
+
+                            {/* Bonus Input */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Bônus (R$)</label>
+                                <input 
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={bonusValue}
+                                    onChange={(e) => setBonusValue(parseFloat(e.target.value) || 0)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm font-bold text-slate-900 focus:ring-primary focus:border-primary"
+                                />
+                            </div>
+                            
+                            {/* Bonus Description */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Descrição do Bônus</label>
+                                <input 
+                                    type="text"
+                                    placeholder="Ex: Agilidade na entrega"
+                                    value={bonusDesc}
+                                    onChange={(e) => setBonusDesc(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-900 focus:ring-primary focus:border-primary"
+                                />
+                            </div>
+
+                            {/* Total */}
+                            <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100">
+                                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Total da Montagem</p>
+                                <p className="text-3xl font-black text-emerald-600">R$ {total.toFixed(2)}</p>
+                            </div>
+
+                            {/* Action */}
+                            <button 
+                                onClick={async () => {
+                                    await dbService.updateAssemblyStatus(order.id, 'Concluído', { bonus: bonusValue, bonusDesc: bonusDesc });
+                                    navigate('/assembly');
+                                }}
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined">check_circle</span>
+                                Finalizar e Enviar para Pagamento
+                            </button>
+                        </>
+                    )}
+
+                    {/* Logic for COMPLETED state (View Only) */}
+                    {order.assemblyStatus === 'Concluído' && (
+                        <div className="text-center p-4 bg-slate-50 rounded-lg">
+                            <span className="material-symbols-outlined text-4xl text-emerald-500 mb-2">task_alt</span>
+                            <p className="font-bold text-slate-900">Montagem Concluída</p>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Realizada por {order.assembler}<br/>
+                                Total Pago: R$ {(order.assemblyBonus || 0) + subTotal}
+                            </p>
                         </div>
-                    </div>
-                    
-                    <div className="h-px bg-slate-100"></div>
-
-                    {/* Subtotal */}
-                    <div className="flex justify-between items-center">
-                        <span className="text-slate-500 text-sm font-medium">Subtotal de Montagem</span>
-                        <span className="text-slate-900 font-bold">R$ {subTotal.toFixed(2)}</span>
-                    </div>
-
-                    {/* Bonus Input */}
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Bônus (R$)</label>
-                        <input 
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={bonusValue}
-                            onChange={(e) => setBonusValue(parseFloat(e.target.value) || 0)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm font-bold text-slate-900 focus:ring-primary focus:border-primary"
-                        />
-                    </div>
-                    
-                    {/* Bonus Description */}
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Descrição do Bônus</label>
-                        <input 
-                            type="text"
-                            placeholder="Ex: Agilidade na entrega"
-                            value={bonusDesc}
-                            onChange={(e) => setBonusDesc(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-900 focus:ring-primary focus:border-primary"
-                        />
-                    </div>
-
-                    {/* Total */}
-                    <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100">
-                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Total da Montagem</p>
-                        <p className="text-3xl font-black text-emerald-600">R$ {total.toFixed(2)}</p>
-                    </div>
-
-                    {/* Action */}
-                    <button 
-                        onClick={handleFinish}
-                        className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                    >
-                        <span className="material-symbols-outlined">check_circle</span>
-                        Finalizar Gestão
-                    </button>
-                    
-                    <p className="text-[10px] text-center text-slate-400 px-4">
-                        Ao finalizar, o status do pedido será atualizado e enviado para faturamento do prestador.
-                    </p>
+                    )}
                 </div>
             </div>
        </div>

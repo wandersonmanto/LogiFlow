@@ -9,6 +9,7 @@ import { OperationalQueue } from './pages/OperationalQueue';
 import { Login } from './pages/Login';
 import { AssemblyList } from './pages/AssemblyList';
 import { AssemblyDetail } from './pages/AssemblyDetail';
+import { AssemblyManifest } from './pages/AssemblyManifest';
 import { Reports } from './pages/Reports';
 import { RouteManagement } from './pages/RouteManagement';
 import { FleetManagement } from './pages/FleetManagement';
@@ -95,6 +96,14 @@ const AppRoutes = () => {
                 <RequireAuth>
                     <Layout>
                         <AssemblyList />
+                    </Layout>
+                </RequireAuth>
+            } />
+
+            <Route path="/assembly/manifest" element={
+                <RequireAuth>
+                    <Layout>
+                        <AssemblyManifest />
                     </Layout>
                 </RequireAuth>
             } />

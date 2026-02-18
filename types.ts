@@ -67,7 +67,7 @@ export interface Order {
   assembler?: string;
   assemblyBonus?: number;
   assemblyBonusDescription?: string;
-  assemblyStatus?: 'Pendente' | 'Agendado' | 'Concluído';
+  assemblyStatus?: 'Pendente' | 'Agendado' | 'Atribuído' | 'Concluído';
 
   // Fields for Logistics Execution
   driverId?: string;
